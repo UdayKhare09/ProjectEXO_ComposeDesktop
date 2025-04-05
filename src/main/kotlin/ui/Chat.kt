@@ -17,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toComposeImageBitmap
-import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import net.ClientSocket
@@ -341,7 +340,7 @@ object Chat {
                             val g2d = createGraphics()
                             g2d.drawImage(it, 0, 0, null)
                             g2d.dispose()
-                            javax.imageio.ImageIO.write(this, "png", baos)
+                            ImageIO.write(this, "png", baos)
                         }
                         baos.toByteArray()
                     }
