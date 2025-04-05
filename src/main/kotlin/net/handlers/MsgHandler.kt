@@ -1,6 +1,7 @@
-package net
+package net.handlers
 
-import Chat
+import ui.Chat
+import net.ClientSocket
 
 class MsgHandler {
     companion object {
@@ -21,7 +22,7 @@ class MsgHandler {
             val message = fullMessage[1]
             println("Private message from $sender: $message")
 
-            // Add to Chat UI
+            // Add to ui.Chat UI
             Chat.receiveMessage(sender, message, true)
         }
 
@@ -31,7 +32,7 @@ class MsgHandler {
             val message = fullMessage[1]
             println("General message from $sender: $message")
 
-            // Add to Chat UI
+            // Add to ui.Chat UI
             if (sender != ClientSocket.username) {
                 Chat.receiveMessage(sender, message, false)
             } else {

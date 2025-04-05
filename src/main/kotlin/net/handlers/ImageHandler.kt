@@ -1,6 +1,6 @@
 package net.handlers
 
-import Chat
+import ui.Chat
 import javax.swing.ImageIcon
 
 class ImageHandler {

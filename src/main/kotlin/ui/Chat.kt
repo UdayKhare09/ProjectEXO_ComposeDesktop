@@ -1,3 +1,6 @@
+package ui
+
+import ImageSender
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,7 +23,7 @@ import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import net.ClientSocket
-import net.MsgHandler
+import net.handlers.MsgHandler
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
@@ -30,7 +33,7 @@ import javax.swing.JOptionPane
 import javax.swing.SwingUtilities
 
 object Chat {
-    // Chat message data class
+    // ui.Chat message data class
     // Modify the ChatMessage data class to support images
     data class ChatMessage(
         val sender: String,
@@ -61,6 +64,8 @@ object Chat {
 
     fun updateOnlineUsers(users: List<String>) {
         onlineUsers.clear()
+        // Add AI to the online users list
+        onlineUsers.add("AI")
         onlineUsers.addAll(users)
         // Ensure general channel exists
         if (!messages.containsKey("general")) {
@@ -144,7 +149,7 @@ object Chat {
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                // Chat panel
+                // ui.Chat panel
                 Column(
                     modifier = Modifier.weight(3f)
                         .fillMaxHeight()
@@ -153,7 +158,7 @@ object Chat {
                         .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp))
                         .padding(16.dp)
                 ) {
-                    // Chat header and messages remain unchanged...
+                    // ui.Chat header and messages remain unchanged...
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
@@ -167,7 +172,7 @@ object Chat {
 
                     HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
 
-                    // Chat messages
+                    // ui.Chat messages
                     LazyColumn(
                         state = listState,
                         modifier = Modifier.weight(1f)
@@ -186,17 +191,19 @@ object Chat {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // Attachment button
-                        IconButton(
-                            onClick = { sendImage(selectedChat.value) },
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(RoundedCornerShape(24.dp))
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = "Attach File",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
+                        if (selectedChat.value != "AI") {
+                            IconButton(
+                                onClick = { sendImage(selectedChat.value) },
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(RoundedCornerShape(24.dp))
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = "Attach File",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
 
                         Spacer(modifier = Modifier.width(8.dp))
@@ -217,22 +224,8 @@ object Chat {
                             ),
                             keyboardActions = androidx.compose.foundation.text.KeyboardActions(
                                 onSend = {
-                                    if (messageInput.isNotBlank()) {
-                                        MsgHandler.sendMessage(messageInput, selectedChat.value)
-
-                                        // Add outgoing message to local state
-                                        val chatKey = selectedChat.value
-                                        val currentMessages = messages.getOrDefault(chatKey, emptyList())
-                                        val newMessage = ChatMessage(
-                                            sender = "Me",
-                                            content = messageInput,
-                                            isPrivate = chatKey != "general",
-                                            isOutgoing = true
-                                        )
-                                        messages[chatKey] = currentMessages + newMessage
-
-                                        messageInput = ""
-                                    }
+                                    sendMsg(messageInput, selectedChat)
+                                    messageInput = "" // Clear input after sending
                                 }
                             ),
                             singleLine = true
@@ -243,22 +236,8 @@ object Chat {
                         // Send button
                         Button(
                             onClick = {
-                                if (messageInput.isNotBlank()) {
-                                    MsgHandler.sendMessage(messageInput, selectedChat.value)
-
-                                    // Add outgoing message to local state
-                                    val chatKey = selectedChat.value
-                                    val currentMessages = messages.getOrDefault(chatKey, emptyList())
-                                    val newMessage = ChatMessage(
-                                        sender = "Me",
-                                        content = messageInput,
-                                        isPrivate = chatKey != "general",
-                                        isOutgoing = true
-                                    )
-                                    messages[chatKey] = currentMessages + newMessage
-
-                                    messageInput = ""
-                                }
+                                sendMsg(messageInput, selectedChat)
+                                messageInput = "" // Clear input after sending
                             },
                             shape = RoundedCornerShape(24.dp),
                             modifier = Modifier.height(56.dp)
@@ -269,6 +248,50 @@ object Chat {
                 }
             }
         }
+    }
+
+    private fun sendMsg(messageInput: String, selectedChat: MutableState<String>) {
+        if (selectedChat.value != "AI") {
+            if (messageInput.isNotBlank()) {
+                MsgHandler.sendMessage(messageInput, selectedChat.value)
+
+                // Add outgoing message to local state
+                val chatKey = selectedChat.value
+                val currentMessages = messages.getOrDefault(chatKey, emptyList())
+                val newMessage = ChatMessage(
+                    sender = "Me",
+                    content = messageInput,
+                    isPrivate = chatKey != "general",
+                    isOutgoing = true
+                )
+                messages[chatKey] = currentMessages + newMessage
+            }
+        } else {
+            sendAIMessage(messageInput)
+        }
+    }
+
+    private fun sendAIMessage(messageInput: String) {
+        val packetType = 9.toByte()
+        val msgType = 1.toByte()
+
+        val messageBytes = messageInput.toByteArray()
+        val packet = ByteArray(2 + messageBytes.size)
+        packet[0] = packetType
+        packet[1] = msgType
+        System.arraycopy(messageBytes, 0, packet, 2, messageBytes.size)
+        ClientSocket.sendPacket(packet)
+
+        // Add outgoing message to local state
+        val chatKey = "AI"
+        val currentMessages = messages.getOrDefault(chatKey, emptyList())
+        val newMessage = ChatMessage(
+            sender = "Me",
+            content = messageInput,
+            isPrivate = true,
+            isOutgoing = true
+        )
+        messages[chatKey] = currentMessages + newMessage
     }
 
     @Composable
