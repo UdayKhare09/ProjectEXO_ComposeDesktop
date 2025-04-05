@@ -1,5 +1,6 @@
 package net
 
+import net.handlers.PacketHandler
 import java.io.*
 import java.net.Socket
 import java.security.KeyFactory
@@ -7,7 +8,6 @@ import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.PublicKey
 import java.security.spec.X509EncodedKeySpec
-import java.util.concurrent.ThreadFactory
 import javax.crypto.Cipher
 
 class ClientSocket {

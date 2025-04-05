@@ -1,6 +1,8 @@
-package net
+package net.handlers
 
 import Chat
+import net.ClientSocket
+import net.MsgHandler
 
 class PacketHandler {
     companion object {
@@ -11,6 +13,7 @@ class PacketHandler {
             when (packetType) {
                 0.toByte() -> handleBroadcastUserList(packetData)
                 1.toByte() -> MsgHandler.handleMsgPacket(packetData)
+                3.toByte() -> ImageHandler.handleImagePacket(packetData)
                 else -> println("Unknown packet type: $packetType")
             }
         }
