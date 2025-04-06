@@ -40,7 +40,7 @@ import javax.swing.JOptionPane
 import javax.swing.SwingUtilities
 
 object Chat {
-    // ui.Chat message data class
+    // Chat message data class
     // Modify the ChatMessage data class to support images
     data class ChatMessage(
         val sender: String,
@@ -59,7 +59,7 @@ object Chat {
 
     // Store messages by chat channel (user or "general")
     val messages = mutableStateMapOf<String, List<ChatMessage>>()
-    val onlineUsers = mutableStateListOf<String>()
+    private val onlineUsers = mutableStateListOf<String>()
 
     // Currently selected chat (default is "general")
     private val currentChat = mutableStateOf("general")
@@ -394,9 +394,7 @@ object Chat {
                     Text(
                         text = message.sender,
                         style = MaterialTheme.typography.labelMedium,
-                        color = if (message.isOutgoing)
-                            MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
-                        else if (message.isPrivate)
+                        color = if (message.isPrivate)
                             MaterialTheme.colorScheme.onTertiaryContainer
                         else
                             MaterialTheme.colorScheme.onSecondaryContainer
