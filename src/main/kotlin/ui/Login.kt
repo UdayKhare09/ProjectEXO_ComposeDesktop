@@ -113,7 +113,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
                                 onClick = {
                                     selectedServer = server
                                     serverIP = server.ipAddress
-                                    serverPort = (server.port.toIntOrNull()).toString()
+                                    serverPort = (server.port.toInt()).toString()
                                 }
                             )
                         }
@@ -176,7 +176,17 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
             OutlinedTextField(
                 value = serverPort,
                 onValueChange = {
-                    serverPort = it.toIntOrNull().toString()
+                    // Only update if the input is a valid integer or empty
+                    serverPort = if (it.isEmpty()) {
+                        it
+                    } else {
+                        try {
+                            it.toInt().toString()
+                        } catch (e: NumberFormatException) {
+                            // Keep the previous valid value if new input isn't a valid number
+                            serverPort
+                        }
+                    }
                     selectedServer = null
                 },
                 label = { Text("Server Port") },
@@ -184,6 +194,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
                 singleLine = true,
                 enabled = selectedServer == null,
                 keyboardOptions = KeyboardOptions.Default.copy(
+                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
                     imeAction = androidx.compose.ui.text.input.ImeAction.Next
                 )
             )
