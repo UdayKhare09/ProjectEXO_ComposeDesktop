@@ -1,6 +1,5 @@
 package ui
 
-import ImageSender
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,8 +19,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toComposeImageBitmap
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import net.ClientSocket
 import net.handlers.MsgHandler
 import java.awt.image.BufferedImage
@@ -74,7 +80,7 @@ object Chat {
     }
 
     @Composable
-    fun ChatScreen() {
+    fun ChatScreen(onLogout: () -> Unit, onBack: () -> Unit) {
         var messageInput by remember { mutableStateOf("") }
         val selectedChat = remember { currentChat }
         val chatMessages = messages[selectedChat.value] ?: emptyList()
@@ -91,11 +97,39 @@ object Chat {
 
         Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
             // Header remains unchanged...
-            Text(
-                text = "Secure Chat",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Back button
+                Button(
+                    onClick = onBack,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                ) {
+                    Text("Back")
+                }
+
+                // Title
+                Text(
+                    text = "Secure Chat",
+                    style = MaterialTheme.typography.headlineMedium
+                )
+
+                // Logout button
+                Button(
+                    onClick = onLogout,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                ) {
+                    Text("Logout")
+                }
+            }
 
             Row(modifier = Modifier.fillMaxSize()) {
                 // Online users panel remains unchanged...
@@ -373,21 +407,114 @@ object Chat {
                         contentDescription = "Sent image",
                         modifier = Modifier.size(200.dp)
                             .clickable {
-                                // Handle image click (e.g., open in full screen)
                                 saveImage(message.image)
                             }
                     )
                 } else {
-                    Text(
-                        text = message.content,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = if (message.isOutgoing)
-                            MaterialTheme.colorScheme.onPrimary
-                        else if (message.isPrivate)
-                            MaterialTheme.colorScheme.onTertiaryContainer
-                        else
-                            MaterialTheme.colorScheme.onSecondaryContainer
-                    )
+                    // Check if it's an AI message and should use markdown
+                    if (message.sender == "AI") {
+                        MarkdownText(
+                            content = message.content,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
+                    } else {
+                        Text(
+                            text = message.content,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (message.isOutgoing)
+                                MaterialTheme.colorScheme.onPrimary
+                            else if (message.isPrivate)
+                                MaterialTheme.colorScheme.onTertiaryContainer
+                            else
+                                MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    @Composable
+    private fun MarkdownText(content: String, color: Color) {
+        val parsedMarkdown = remember(content) {
+            parseMarkdownToAnnotatedString(content, color)
+        }
+
+        Text(
+            text = parsedMarkdown,
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+
+    private fun parseMarkdownToAnnotatedString(markdown: String, defaultColor: Color): AnnotatedString {
+        // A simple markdown parser for basic formatting
+        return buildAnnotatedString {
+            withStyle(SpanStyle(color = defaultColor)) {
+                // Process lines to handle different markdown elements
+                val lines = markdown.split("\n")
+
+                lines.forEachIndexed { index, line ->
+                    // Headers
+                    if (line.startsWith("# ")) {
+                        withStyle(SpanStyle(fontWeight = FontWeight.Bold, fontSize = 24.sp)) {
+                            append(line.substring(2))
+                        }
+                    }
+                    else if (line.startsWith("## ")) {
+                        withStyle(SpanStyle(fontWeight = FontWeight.Bold, fontSize = 20.sp)) {
+                            append(line.substring(3))
+                        }
+                    }
+                    else if (line.startsWith("### ")) {
+                        withStyle(SpanStyle(fontWeight = FontWeight.Bold, fontSize = 18.sp)) {
+                            append(line.substring(4))
+                        }
+                    }
+                    // Code block
+                    else if (line.startsWith("```")) {
+                        withStyle(SpanStyle(fontFamily = FontFamily.Monospace, background = Color.DarkGray.copy(alpha = 0.2f))) {
+                            append(line.substring(3))
+                        }
+                    }
+                    // Bold
+                    else if (line.contains("**")) {
+                        val parts = line.split("**")
+                        for (i in parts.indices) {
+                            if (i % 2 == 1) { // Odd indices are inside ** markers
+                                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                                    append(parts[i])
+                                }
+                            } else {
+                                append(parts[i])
+                            }
+                        }
+                    }
+                    // Italic
+                    else if (line.contains("*")) {
+                        val parts = line.split("*")
+                        for (i in parts.indices) {
+                            if (i % 2 == 1) { // Odd indices are inside * markers
+                                withStyle(SpanStyle(fontStyle = FontStyle.Italic)) {
+                                    append(parts[i])
+                                }
+                            } else {
+                                append(parts[i])
+                            }
+                        }
+                    }
+                    // Bullet points
+                    else if (line.startsWith("- ")) {
+                        append("• ${line.substring(2)}")
+                    }
+                    // Regular text
+                    else {
+                        append(line)
+                    }
+
+                    // Add newline if not the last line
+                    if (index < lines.size - 1) {
+                        append("\n")
+                    }
                 }
             }
         }

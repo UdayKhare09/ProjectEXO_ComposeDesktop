@@ -22,6 +22,9 @@ dependencies {
     // With compose.desktop.common you will also lose @Preview functionality
     implementation(compose.desktop.currentOs)
     implementation(compose.material3)
+
+    implementation("org.jetbrains.androidx.navigation:navigation-compose:2.8.0-alpha11")
+
 }
 
 compose.desktop {
@@ -33,5 +36,13 @@ compose.desktop {
             packageName = "ProjectEXO_Kotlin"
             packageVersion = "1.0.0"
         }
+    }
+}
+
+tasks.register("showEnv") {
+    doLast {
+        println("OS: ${System.getProperty("os.name")}")
+        println("Architecture: ${System.getProperty("os.arch")}")
+        println("Java Version: ${System.getProperty("java.version")}")
     }
 }

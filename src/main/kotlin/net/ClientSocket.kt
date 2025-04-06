@@ -209,5 +209,18 @@ class ClientSocket {
                 e.printStackTrace()
             }
         }
+
+        fun disconnect() {
+            try {
+                socket.close()
+                inputStream?.close()
+                outputStream?.close()
+                dataInputStream?.close()
+                dataOutputStream?.close()
+                println("Disconnected from server")
+            } catch (e: Exception) {
+                println("Error disconnecting: ${e.message}")
+            }
+        }
     }
 }

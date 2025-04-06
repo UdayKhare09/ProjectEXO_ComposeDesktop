@@ -1,5 +1,6 @@
+package ui
+
 import net.ClientSocket
-import ui.Chat
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream

@@ -48,7 +48,6 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
             label = { Text("Username") },
             modifier = Modifier.fillMaxWidth(0.5f),
             singleLine = true,
-            // focus on new text field on enter
             keyboardOptions = KeyboardOptions.Default.copy(
                 imeAction = androidx.compose.ui.text.input.ImeAction.Next
             )
@@ -63,13 +62,18 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(0.5f),
             singleLine = true,
-            // login on enter
             keyboardOptions = KeyboardOptions.Default.copy(
                 imeAction = androidx.compose.ui.text.input.ImeAction.Done
             ),
             keyboardActions = androidx.compose.foundation.text.KeyboardActions(
                 onDone = {
-                    login(isLoading, errorMessage, username, password, onLoginSuccess)
+                    if (!isLoading && username.isNotBlank() && password.isNotBlank()) {
+                        attemptLogin(username, password,
+                            onLoadingChange = { isLoading = it },
+                            onErrorChange = { errorMessage = it },
+                            onLoginSuccess = onLoginSuccess
+                        )
+                    }
                 }
             )
         )
@@ -88,7 +92,13 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
 
         Button(
             onClick = {
-                login(isLoading, errorMessage, username, password, onLoginSuccess)
+                if (!isLoading && username.isNotBlank() && password.isNotBlank()) {
+                    attemptLogin(username, password,
+                        onLoadingChange = { isLoading = it },
+                        onErrorChange = { errorMessage = it },
+                        onLoginSuccess = onLoginSuccess
+                    )
+                }
             },
             enabled = !isLoading && username.isNotBlank() && password.isNotBlank(),
             modifier = Modifier.fillMaxWidth(0.3f)
@@ -105,27 +115,29 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
     }
 }
 
-private fun login(
-    isLoading: Boolean,
-    errorMessage: String?,
+private fun attemptLogin(
     username: String,
     password: String,
+    onLoadingChange: (Boolean) -> Unit,
+    onErrorChange: (String?) -> Unit,
     onLoginSuccess: () -> Unit
 ) {
-    var isLoading1 = isLoading
-    var errorMessage1 = errorMessage
-    isLoading1 = true
-    errorMessage1 = null
+    onLoadingChange(true)
+    onErrorChange(null)
 
     // Use a separate thread for network operations
     Thread {
         val success = ClientSocket.init(username, password)
-        isLoading1 = false
 
-        if (success) {
-            onLoginSuccess()
-        } else {
-            errorMessage1 = "Invalid username or password"
+        // Update UI on the main thread
+        java.awt.EventQueue.invokeLater {
+            onLoadingChange(false)
+
+            if (success) {
+                onLoginSuccess()
+            } else {
+                onErrorChange("Invalid username or password")
+            }
         }
     }.start()
 }
