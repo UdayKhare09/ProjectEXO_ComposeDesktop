@@ -27,15 +27,14 @@ class ClientSocket {
         var onlineUsers = mutableListOf<String>()
 
         // This function initializes the socket connection and starts the key exchange and authentication process and returns a boolean
-        fun init(username: String, password: String) : Boolean {
+        fun init(username: String, password: String,serverIP:String, serverPort: Int) : Boolean {
             println("ClientSocket initializing...")
             // Host and port should be passed as arguments
-            val host = "localhost"
-            val port = 2005
+            val host = serverIP
             this.username = username
             this.password = password
             try {
-                socket = Socket(host, port)
+                socket = Socket(host, serverPort)
                 inputStream = socket.getInputStream()
                 outputStream = socket.getOutputStream()
                 dataOutputStream = DataOutputStream(outputStream)
@@ -46,7 +45,7 @@ class ClientSocket {
                 println("Error initializing socket: ${e.message}")
                 return false
             }
-            println("ClientSocket initialized with host: $host and port: $port")
+            println("ClientSocket initialized with host: $host and port: $serverPort")
             keyExchange()
             val b = auth()
             Thread{ startReceivingPacket() }.start()
