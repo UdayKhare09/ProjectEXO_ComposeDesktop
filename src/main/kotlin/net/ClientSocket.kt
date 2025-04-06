@@ -20,21 +20,21 @@ class ClientSocket {
         private var dataInputStream: DataInputStream? = null
         private lateinit var serverPublicKey: PublicKey
         private var cipher: Cipher? = null
-        public var username: String = "test"
-        public var password: String = "test"
+        var username: String = "test"
+        private var password: String = "test"
         private var CHUNK_SIZE = 245
 
         var onlineUsers = mutableListOf<String>()
 
         // This function initializes the socket connection and starts the key exchange and authentication process and returns a boolean
-        fun init(username: String, password: String,serverIP:String, serverPort: Int) : Boolean {
+        fun init(username: String, password: String, serverIP:String, serverPort: String) : Boolean {
             println("ClientSocket initializing...")
             // Host and port should be passed as arguments
             val host = serverIP
             this.username = username
             this.password = password
             try {
-                socket = Socket(host, serverPort)
+                socket = Socket(host, serverPort.toInt())
                 inputStream = socket.getInputStream()
                 outputStream = socket.getOutputStream()
                 dataOutputStream = DataOutputStream(outputStream)

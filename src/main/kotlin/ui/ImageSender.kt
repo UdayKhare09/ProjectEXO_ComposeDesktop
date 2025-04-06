@@ -111,6 +111,7 @@ class ImageSender {
                             System.arraycopy(fileContent, 0, packetData, 32, fileContent.size)
                             ClientSocket.sendPacket(packetData)
                         }
+                        Chat.playSendSound()
                     } catch (e: java.lang.Exception) {
                         e.printStackTrace()
                         SwingUtilities.invokeLater {

@@ -25,8 +25,8 @@ import javax.imageio.ImageIO
 fun LoginScreen(onLoginSuccess: () -> Unit) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var serverIP by remember { mutableStateOf("localhost") }
-    var serverPort by remember { mutableStateOf(2005) }
+    var serverIP by remember { mutableStateOf("") }
+    var serverPort by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
@@ -113,7 +113,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
                                 onClick = {
                                     selectedServer = server
                                     serverIP = server.ipAddress
-                                    serverPort = server.port.toIntOrNull() ?: 2005
+                                    serverPort = (server.port.toIntOrNull()).toString()
                                 }
                             )
                         }
@@ -122,8 +122,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
 
                 OutlinedButton(
                     onClick = {
-                        serverIP = "localhost"
-                        serverPort = 2005
+                        serverIP = ""
                         selectedServer = null
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -175,9 +174,9 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
-                value = serverPort.toString(),
+                value = serverPort,
                 onValueChange = {
-                    serverPort = it.toIntOrNull() ?: 2005
+                    serverPort = it.toIntOrNull().toString()
                     selectedServer = null
                 },
                 label = { Text("Server Port") },
@@ -309,7 +308,7 @@ private fun attemptLogin(
     username: String,
     password: String,
     serverIP: String,
-    serverPort: Int,
+    serverPort: String,
     onLoadingChange: (Boolean) -> Unit,
     onErrorChange: (String?) -> Unit,
     onLoginSuccess: () -> Unit

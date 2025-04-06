@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import net.ClientSocket
 import net.handlers.MsgHandler
+import utils.AudioPlayer
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
@@ -55,6 +56,7 @@ object Chat {
             ImageSender.sendImage(recipient)
         }.start()
     }
+
     // Store messages by chat channel (user or "general")
     val messages = mutableStateMapOf<String, List<ChatMessage>>()
     val onlineUsers = mutableStateListOf<String>()
@@ -66,6 +68,11 @@ object Chat {
         val chatKey = if (isPrivate) sender else "general"
         val currentMessages = messages.getOrDefault(chatKey, emptyList())
         messages[chatKey] = currentMessages + ChatMessage(sender, message, isPrivate, false)
+        playReceiveSound()
+    }
+
+    private fun playReceiveSound() {
+        AudioPlayer.playEffect("/sound/receive.wav")
     }
 
     fun updateOnlineUsers(users: List<String>) {
@@ -288,6 +295,7 @@ object Chat {
         if (selectedChat.value != "AI") {
             if (messageInput.isNotBlank()) {
                 MsgHandler.sendMessage(messageInput, selectedChat.value)
+                playSendSound()
 
                 // Add outgoing message to local state
                 val chatKey = selectedChat.value
@@ -315,6 +323,7 @@ object Chat {
         packet[1] = msgType
         System.arraycopy(messageBytes, 0, packet, 2, messageBytes.size)
         ClientSocket.sendPacket(packet)
+        playSendSound()
 
         // Add outgoing message to local state
         val chatKey = "AI"
@@ -327,6 +336,13 @@ object Chat {
         )
         messages[chatKey] = currentMessages + newMessage
     }
+
+    // Add this function to play the sound effect
+    fun playSendSound() {
+        AudioPlayer.playEffect("/sound/send.wav")
+    }
+
+
 
     @Composable
     private fun ChatListItem(name: String, isSelected: Boolean, onClick: () -> Unit) {
@@ -459,20 +475,23 @@ object Chat {
                         withStyle(SpanStyle(fontWeight = FontWeight.Bold, fontSize = 24.sp)) {
                             append(line.substring(2))
                         }
-                    }
-                    else if (line.startsWith("## ")) {
+                    } else if (line.startsWith("## ")) {
                         withStyle(SpanStyle(fontWeight = FontWeight.Bold, fontSize = 20.sp)) {
                             append(line.substring(3))
                         }
-                    }
-                    else if (line.startsWith("### ")) {
+                    } else if (line.startsWith("### ")) {
                         withStyle(SpanStyle(fontWeight = FontWeight.Bold, fontSize = 18.sp)) {
                             append(line.substring(4))
                         }
                     }
                     // Code block
                     else if (line.startsWith("```")) {
-                        withStyle(SpanStyle(fontFamily = FontFamily.Monospace, background = Color.DarkGray.copy(alpha = 0.2f))) {
+                        withStyle(
+                            SpanStyle(
+                                fontFamily = FontFamily.Monospace,
+                                background = Color.DarkGray.copy(alpha = 0.2f)
+                            )
+                        ) {
                             append(line.substring(3))
                         }
                     }
@@ -545,8 +564,9 @@ object Chat {
                 image = image
             )
         }
-
+        playReceiveSound()
     }
+
     private fun saveImage(image: ImageIcon) {
         Thread {
             try {
