@@ -1,5 +1,6 @@
 package ui
 
+import Game.Test.GameLauncher
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,6 +15,7 @@ import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import javax.imageio.ImageIO
+import Game.Test.SimpleLibGDXWindow
 
 @Composable
 fun FeatureScreen(
@@ -119,9 +121,11 @@ fun FeatureScreen(
             Spacer(modifier = Modifier.width(24.dp))
 
             FeatureCard(
-                title = "Group Chats",
-                description = "Create and manage group conversations",
-                onClick = onContinueToChat
+                title = "LibGDX Window",
+                description = "Launch a simple LibGDX window",
+                onClick = {
+                   GameLauncher.launch()
+                }
             )
         }
     }

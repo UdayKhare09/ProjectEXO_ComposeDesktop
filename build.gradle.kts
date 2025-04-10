@@ -25,6 +25,10 @@ dependencies {
 
     implementation("org.jetbrains.androidx.navigation:navigation-compose:2.8.0-alpha11")
 
+    implementation("com.badlogicgames.gdx:gdx:1.13.1")
+    implementation("com.badlogicgames.gdx:gdx-backend-lwjgl3:1.12.0")
+    implementation("com.badlogicgames.gdx:gdx-platform:1.12.0:natives-desktop")
+
 }
 
 compose.desktop {
