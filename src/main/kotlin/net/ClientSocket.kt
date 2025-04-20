@@ -9,6 +9,7 @@ import java.security.KeyPairGenerator
 import java.security.PublicKey
 import java.security.spec.X509EncodedKeySpec
 import javax.crypto.Cipher
+import kotlin.system.exitProcess
 
 class ClientSocket {
     companion object {// This class is responsible for managing the client socket connection
@@ -206,6 +207,8 @@ class ClientSocket {
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
+                disconnect()
+                exitProcess(0)
             }
         }
 
